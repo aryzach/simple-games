@@ -3,13 +3,17 @@ import Dependencies._
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
-      organization := "com.example",
+      organization := "com.github.lpld",
       scalaVersion := "2.12.6",
       version := "0.1.0-SNAPSHOT"
     )),
-    name := "game-of-life",
+    name := "simple-games",
     libraryDependencies += scalaTest % Test,
     libraryDependencies += scalaz,
     libraryDependencies += scalazEffect,
-    scalacOptions += "-Ypartial-unification"
+    scalacOptions ++= Seq(
+      "-Ypartial-unification",
+      "-Xfatal-warnings",
+      "-language:higherKinds"
+    )
   )
