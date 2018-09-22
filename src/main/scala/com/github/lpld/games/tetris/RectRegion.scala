@@ -18,6 +18,15 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
 
   def apply(i: Int, j: Int): Boolean = cells(i)(j)
 
+  /**
+    * Rotate clockwise:
+    * {{{
+    *   .XX.    ...
+    *   .X.. -> XXX
+    *   .X..    ..X
+    *           ...
+    * }}}
+    */
   def rotate: RectRegion =
     if (height == 0) this
     else RectRegion {
@@ -25,6 +34,14 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
         for (j <- (0 until height).reverse) yield this (j, i)
     }
 
+  /**
+    * Mirror vertically:
+    * {{{
+    *   .XX.    .XX.
+    *   .X.. -> ..X.
+    *   .X..    ..X.
+    * }}}
+    */
   def mirror: RectRegion =
     if (height == 0) this
     else RectRegion {
@@ -45,7 +62,7 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
         coord.x + injectee.height > this.height ||
         coord.y + injectee.width > this.width) Empty()
     else {
-      // Combine two values only if there they not both true.
+      // Combine two values only if they are not both true.
       def combineValues(v1: Boolean, v2: Boolean): Maybe[Boolean] =
         if (v1 && v2) Empty()
         else Just(v1 || v2)
