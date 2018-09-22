@@ -1,5 +1,5 @@
 # simple-games
-Simple games with Scala, FP and Scalaz
+Simple games using FP paradigm with Scala and Scalaz
 
 - Conway's Game of Life
 - Tetris
