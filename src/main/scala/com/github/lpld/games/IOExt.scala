@@ -1,16 +1,17 @@
 package com.github.lpld.games
 
-import scalaz.Traverse
-import scalaz.effect.IO
-import scalaz.Scalaz._
+import scalaz._
+import Scalaz._
 
 /**
   * @author leopold
   * @since 22/09/18
   */
 object IOExt {
-  implicit class traverseOps[A, T[_]: Traverse](t: T[IO[A]]) {
 
-    def flattenIO: IO[Unit] = t.sequence.map(_ => ())
+  implicit class traverseOps[A, T[_] : Traverse](t: T[A]) {
+
+    def mapSeqUnit[F[_] : Applicative, B](f: A => F[B]): F[Unit] = t.map(f).sequence.map(_ => ())
   }
+
 }

@@ -14,17 +14,17 @@ object GameApp extends SafeApp {
 
   override def runc: IO[Unit] = {
     val game = new Game(Board(initialRows), closed = true)
-    game.boards.map(printBoard).flattenIO
+    game.boards.mapSeqUnit(printBoard)
   }
 
   val printEmptyLine: IO[Unit] = putStrLn("")
-  val clearScreen: IO[Unit] = (1 to 30).toList.map(_ => printEmptyLine).flattenIO
+  val clearScreen: IO[Unit] = (1 to 30).toList.mapSeqUnit(_ => printEmptyLine)
   val sleep: IO[Unit] = IO { Thread.sleep(200) }
 
   def printRow(row: Vector[Boolean]): IO[Unit] =
     putStrLn(row.map(if (_) '\u25A0' else '.').mkString)
 
-  def printRows(board: Board): IO[Unit] = board.rows.map(printRow).flattenIO
+  def printRows(board: Board): IO[Unit] = board.rows.mapSeqUnit(printRow)
 
   def printBoard(board: Board): IO[Unit] =
     for {
