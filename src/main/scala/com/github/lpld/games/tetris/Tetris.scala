@@ -1,7 +1,6 @@
 package com.github.lpld.games.tetris
 
-import com.github.lpld.games.tetris.Tetris.{Board, Coord}
-import scalaz.EphemeralStream
+import scalaz.EphemeralStream, EphemeralStream._
 
 /**
   * @author leopold
@@ -10,22 +9,34 @@ import scalaz.EphemeralStream
 sealed trait Action
 object Action {
   case object Start extends Action
-  case class Fall(shape: Piece, coord: Coord) extends Action
+  case class Fall(piece: RectRegion, coord: Coord) extends Action
 }
 
-case class State(board: RectRegion, nextAction: Action)
+case class State
+(
+  field: RectRegion,
+  nextAction: Action,
+  pieces: EphemeralStream[RectRegion]
+)
 
-class Tetris(width: Int, height: Int) {
+object Tetris {
 
-  private val initial = State(Seq.fill(height, width)(false), Action.Start)
+  type ShapeState
+}
+
+class Tetris(height: Int, width: Int) {
+
+  private val startingPoint: Coord = Coord(0, width / 2)
+
+  private val initial = State(RectRegion(height, width), Action.Start, Pieces.infiniteStream)
 
   val states: EphemeralStream[State] = EphemeralStream.iterate(initial)(evolve)
 
   private def evolve(state: State): State = {
 
     state match {
-      case State(board, Action.Start) => ???
-      case State(board, Action.Fall(shape, coord)) => ???
+      case State(field, Action.Start, nextPiece ##:: rest) => ???
+      case State(field, Action.Fall(shape, coord), pieces) => ???
     }
 
     ???
