@@ -65,13 +65,13 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
             combineCellsAt(x, y)
           }
 
+//      combined.foldLeft(Maybe.just(Seq.empty[Seq[Boolean]]))((acc, row) =>
+//        acc.flatMap(rows => row.sequence.map(r => rows :+ r)))
+
       // Turn Seq[Seq[Maybe[Boolean]] into Maybe[Seq[Seq[Boolean]]. If any of the cells is Empty,
       // then the whole regions will be empty
       combined
-        .foldLeft(Maybe.just(Seq.empty[Seq[Boolean]]))((acc, row) => acc match {
-          case Empty() => Empty()
-          case Just(rows) => row.sequence.map(r => rows :+ r)
-        })
+        .map(_.sequence).sequence
         .map(RectRegion(_))
     }
 
