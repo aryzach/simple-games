@@ -1,37 +1,44 @@
 package com.github.lpld.games.gameoflife
 
-import com.github.lpld.games.IOExt._
+import java.io.IOException
+
 import com.github.lpld.games.gameoflife.GameOfLife.Board
 import scalaz.Scalaz._
-import scalaz.effect.IO.putStrLn
-import scalaz.effect.{IO, SafeApp}
+import scalaz.zio.console._
+import scalaz.zio.interop.scalaz72._
+import scalaz.zio.{App, IO}
+
+import scala.concurrent.duration.DurationInt
 
 /**
   * @author leopold
   * @since 21/09/18
   */
-object GameApp extends SafeApp {
+object GameApp extends App {
 
-  override def runc: IO[Unit] = {
+  type Res[T] = IO[IOException, T]
+
+  private def printError(err: IOException): IO[Nothing, Unit] =
+    putStrLn(err.getMessage).catchAll(_ => IO.unit)
+
+  override def run(args: List[String]): IO[Nothing, ExitStatus] = {
     val game = new Game(Board(initialRows), closed = true)
-    game.boards.mapSeqUnit(printBoard)
+    game.boards.traverse(printBoard)
+      .void
+      .catchAll(printError) *>
+    IO.point(ExitStatus.ExitNow(0))
   }
 
-  val printEmptyLine: IO[Unit] = putStrLn("")
-  val clearScreen: IO[Unit] = (1 to 30).toList.mapSeqUnit(_ => printEmptyLine)
-  val sleep: IO[Unit] = IO { Thread.sleep(200) }
+  val printEmptyLine: Res[Unit] = putStrLn("")
+  val clearScreen: Res[List[Unit]] = (1 to 30).toList.traverse(_ => printEmptyLine)
 
-  def printRow(row: Vector[Boolean]): IO[Unit] =
+  def printRow(row: Vector[Boolean]): Res[Unit] =
     putStrLn(row.map(if (_) '\u25A0' else '.').mkString)
 
-  def printRows(board: Board): IO[Unit] = board.rows.mapSeqUnit(printRow)
+  def printRows(board: Board): Res[Vector[Unit]] = board.rows.traverse(printRow)
 
-  def printBoard(board: Board): IO[Unit] =
-    for {
-      _ <- clearScreen
-      _ <- printRows(board)
-      _ <- sleep
-    } yield ()
+  def printBoard(board: Board): Res[Unit] =
+    clearScreen *> printRows(board) *> IO.sleep(200.millis)
 
   val initialRows = Vector(
     row("............................................"),
@@ -55,5 +62,5 @@ object GameApp extends SafeApp {
     row("............................................")
   )
 
-  def row(r: String) = r.map(_ == 'X').toVector
+  private def row(r: String) = r.map(_ == 'X').toVector
 }

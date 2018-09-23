@@ -26,7 +26,7 @@ object Tetris {
 
 class Tetris(height: Int, width: Int) {
 
-  private val startingPoint: Coord = Coord(0, width / 2)
+  private val start: Coord = Coord(0, width / 2)
 
   private val initial = State(RectRegion(height, width), Action.Start, Pieces.infiniteStream)
 

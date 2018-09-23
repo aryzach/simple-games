@@ -50,9 +50,13 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
     }
 
   /**
-    * Try "inject" one region into another. If there's no room for {{{injectee}}} region, this
-    * function will return [[scalaz.Maybe.Empty]]. Otherwise it will return new [[RectRegion]] that
-    * is the result of injection.
+    * Try "inject" a new {{{injectee}}} region into this region at coordinates {{{coord}}}.
+    * "Injection" means that the resulting region will be the same size as "this" region and
+    * that the corresponding cells of both regions will be combined (if possible). Two cells can be
+    * combined if at least one of them is empty (false). If both cells are non-empty (true),
+    * it means that there's no room for {{{injectee}}} region. In this case this function will
+    * return [[scalaz.Maybe.Empty]]. Otherwise it will return new [[RectRegion]] that
+    * is the result of the injection.
     */
   def inject(injectee: RectRegion, coord: Coord): Maybe[RectRegion] =
 

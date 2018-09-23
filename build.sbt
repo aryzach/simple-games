@@ -8,9 +8,15 @@ lazy val root = (project in file(".")).
       version := "0.1.0-SNAPSHOT"
     )),
     name := "simple-games",
-    libraryDependencies += scalaTest % Test,
-    libraryDependencies += scalaz,
-    libraryDependencies += scalazEffect,
+    libraryDependencies ++= Seq(
+      scalaTest % Test,
+      scalaz,
+      zio,
+      zioInterop,
+      scalazEffect,
+      scalazConcurrent,
+      scalazStream
+    ),
     scalacOptions ++= Seq(
       "-Ypartial-unification",
       "-Xfatal-warnings",
