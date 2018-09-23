@@ -6,7 +6,7 @@ import com.github.lpld.games.gameoflife.GameOfLife.Board
 import scalaz.Scalaz._
 import scalaz.zio.console._
 import scalaz.zio.interop.scalaz72._
-import scalaz.zio.{App, IO}
+import scalaz.zio.{App, IO, Schedule}
 
 import scala.concurrent.duration.DurationInt
 
@@ -23,14 +23,14 @@ object GameApp extends App {
 
   override def run(args: List[String]): IO[Nothing, ExitStatus] = {
     val game = new Game(Board(initialRows), closed = true)
-    game.boards.traverse(printBoard)
-      .void
-      .catchAll(printError) *>
-    IO.point(ExitStatus.ExitNow(0))
+
+    game.boards
+      .traverse(printBoard)
+      .catchAll(printError) *> IO.point(ExitStatus.ExitNow(0))
   }
 
   val printEmptyLine: Res[Unit] = putStrLn("")
-  val clearScreen: Res[List[Unit]] = (1 to 30).toList.traverse(_ => printEmptyLine)
+  val clearScreen: Res[Int] = printEmptyLine.repeat(Schedule.recurs(30))
 
   def printRow(row: Vector[Boolean]): Res[Unit] =
     putStrLn(row.map(if (_) '\u25A0' else '.').mkString)
@@ -38,13 +38,13 @@ object GameApp extends App {
   def printRows(board: Board): Res[Vector[Unit]] = board.rows.traverse(printRow)
 
   def printBoard(board: Board): Res[Unit] =
-    clearScreen *> printRows(board) *> IO.sleep(200.millis)
+    clearScreen *> printRows(board) *> IO.sleep(150.millis)
 
   val initialRows = Vector(
     row("............................................"),
-    row("............................................"),
-    row("............................................"),
-    row("............................................"),
+    row("...X........................................"),
+    row("..X........................................."),
+    row("..XXX......................................."),
     row("............................................"),
     row("............................................"),
     row("............................................"),
