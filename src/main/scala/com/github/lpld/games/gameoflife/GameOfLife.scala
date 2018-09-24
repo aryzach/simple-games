@@ -1,6 +1,7 @@
 package com.github.lpld.games.gameoflife
 
 import com.github.lpld.games.gameoflife.GameOfLife._
+import fs2.{Pure, Stream}
 import scalaz.EphemeralStream
 
 /**
@@ -25,7 +26,7 @@ class Game(initial: Board, closed: Boolean = false) {
   private val sizeX: Size = initial.sizeX
   private val sizeY: Size = initial.sizeY
 
-  val boards: EphemeralStream[Board] = EphemeralStream.iterate(initial)(evolve)
+  val boards: Stream[Pure, Board] = Stream.iterate(initial)(evolve)
 
   private def evolve(board: Board): Board = Board(
     board.rows.zipWithIndex.map { case (row, x) =>

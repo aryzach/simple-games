@@ -13,9 +13,13 @@ lazy val root = (project in file(".")).
       scalaz,
       zio,
       zioInterop,
-      scalazEffect,
-      scalazConcurrent,
-      scalazStream
+      fs2,
+      fs2Scalaz
+//      cats,
+//      catsEffect
+//      scalazEffect,
+//      scalazConcurrent,
+//      scalazStream
     ),
     scalacOptions ++= Seq(
       "-Ypartial-unification",

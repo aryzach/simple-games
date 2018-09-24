@@ -1,12 +1,10 @@
 package com.github.lpld.games.gameoflife
 
-import java.io.IOException
-
+import fs2.Stream
+import cats.effect.{IO, Timer}
 import com.github.lpld.games.gameoflife.GameOfLife.Board
-import scalaz.Scalaz._
-import scalaz.zio.console._
-import scalaz.zio.interop.scalaz72._
-import scalaz.zio.{App, IO, Schedule}
+
+import scala.concurrent.ExecutionContext
 
 import scala.concurrent.duration.DurationInt
 
@@ -16,31 +14,27 @@ import scala.concurrent.duration.DurationInt
   */
 object GameApp extends App {
 
-  type Res[T] = IO[IOException, T]
+  val clearScreen = Stream.eval(putStrLn("")).repeat.take(30)
 
-  private def printError(err: IOException): IO[Nothing, Unit] =
-    putStrLn(err.getMessage).catchAll(_ => IO.unit)
+  val game = new Game(Board(initialRows), closed = true)
 
-  override def run(args: List[String]): IO[Nothing, ExitStatus] = {
-    val game = new Game(Board(initialRows), closed = true)
+  implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
 
-    game.boards
-      .traverse(printBoard)
-      .catchAll(printError) *> IO.point(ExitStatus.ExitNow(0))
-  }
+  Stream.awakeEvery[IO](200.millis)
+    .zipWith(game.boards.flatMap(printBoard))((_, i) => i)
+    .compile.drain
+    .unsafeRunSync()
 
-  val printEmptyLine: Res[Unit] = putStrLn("")
-  val clearScreen: Res[Int] = printEmptyLine.repeat(Schedule.recurs(30))
+  def putStrLn(s: String) = IO { println(s) }
 
-  def printRow(row: Vector[Boolean]): Res[Unit] =
+  def printRow(row: Vector[Boolean]) =
     putStrLn(row.map(if (_) '\u25A0' else '.').mkString)
 
-  def printRows(board: Board): Res[Vector[Unit]] = board.rows.traverse(printRow)
+  def printRows(board: Board) = Stream(board.rows: _*).evalMap(printRow)
 
-  def printBoard(board: Board): Res[Unit] =
-    clearScreen *> printRows(board) *> IO.sleep(150.millis)
+  def printBoard(board: Board) = (clearScreen ++ printRows(board)).last
 
-  val initialRows = Vector(
+  def initialRows = Vector(
     row("............................................"),
     row("...X........................................"),
     row("..X........................................."),
