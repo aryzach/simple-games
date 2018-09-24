@@ -16,5 +16,4 @@ object TetrisDemo extends SafeApp with ConsoleActions {
 
     printEvery(300.millis)(tetris.states.map(_.evolvingField.cells).flatMap(printNewRegion))
   }
-
 }

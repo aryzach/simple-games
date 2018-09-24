@@ -11,15 +11,9 @@ lazy val root = (project in file(".")).
     libraryDependencies ++= Seq(
       scalaTest % Test,
       scalaz,
-      zio,
-      zioInterop,
       fs2,
-      fs2Scalaz
-//      cats,
-//      catsEffect
-//      scalazEffect,
-//      scalazConcurrent,
-//      scalazStream
+      cats,
+      catsEffect
     ),
     scalacOptions ++= Seq(
       "-Ypartial-unification",
