@@ -28,8 +28,9 @@ object Pieces {
   )
 
   val allPossiblePieces: Seq[RectRegion] = {
-    def multF[A](f: A => A)(times: Int) = List.fill(times)(f)
-      .foldLeft((a => a): A => A)(_ andThen _)
+    // is this a monoid?
+    def multF[A](f: A => A)(times: Int): A => A =
+      (1 to times).foldLeft(identity[A](_))((c, _) => c andThen f)
 
     for {
       m <- 0 to 1 // mirror

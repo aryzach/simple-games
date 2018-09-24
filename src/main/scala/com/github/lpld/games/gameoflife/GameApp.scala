@@ -1,7 +1,8 @@
 package com.github.lpld.games.gameoflife
 
-import cats.effect.IO
-import com.github.lpld.games.{ConsoleActions, SafeApp}
+import cats.syntax.all._
+import cats.effect.{ExitCode, IO, IOApp}
+import com.github.lpld.games.ConsoleActions
 import com.github.lpld.games.gameoflife.GameOfLife.Board
 
 import scala.concurrent.duration.DurationInt
@@ -10,12 +11,13 @@ import scala.concurrent.duration.DurationInt
   * @author leopold
   * @since 21/09/18
   */
-object GameApp extends SafeApp with ConsoleActions {
+object GameApp extends IOApp with ConsoleActions {
 
-  def run: IO[Unit] = {
+  def run(args: List[String]): IO[ExitCode] = {
     val game = new Game(Board(initialRows), closed = true)
 
-    printEvery(200.millis)(game.boards.flatMap(b => printNewRegion(b.rows)))
+    printEvery(200.millis)(game.boards.flatMap(b => printNewRegion(b.rows))) *>
+    IO.pure(ExitCode.Success)
   }
 
   val initialRows = Vector(
