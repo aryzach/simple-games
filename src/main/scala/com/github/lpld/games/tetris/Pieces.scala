@@ -1,7 +1,6 @@
 package com.github.lpld.games.tetris
 
-import scalaz.Scalaz._
-import scalaz._
+import fs2.{Pure, Stream}
 
 object Pieces {
   val O = RectRegion(
@@ -28,21 +27,20 @@ object Pieces {
       |.X."""
   )
 
-  private val allPossiblePieces: Seq[RectRegion] = {
-    def multF[A](f: RectRegion => RectRegion)(times: Int) = Endo(f).multiply(times)
+  val allPossiblePieces: Seq[RectRegion] = {
+    def multF[A](f: A => A)(times: Int) = List.fill(times)(f)
+      .foldLeft((a => a): A => A)(_ andThen _)
 
     for {
       m <- 0 to 1 // mirror
       r <- 0 to 3 // rotate
       p <- List(O, I, J, S, T)
 
-      transform = multF(_.mirror)(m) andThen multF(_.rotate)(r)
+      transform = multF[RectRegion](_.mirror)(m) andThen multF[RectRegion](_.rotate)(r)
     } yield transform(p)
   }
 
   // for testing. infinite, but not random stream of pieces
-  val infiniteStream: EphemeralStream[RectRegion] = EphemeralStream
-    .unfold(allPossiblePieces)(p => Some(p, p))
-    .flatMap(p => EphemeralStream(p: _*))
+  val infiniteStream: Stream[Pure, RectRegion] = Stream(allPossiblePieces: _*).repeat
 
 }

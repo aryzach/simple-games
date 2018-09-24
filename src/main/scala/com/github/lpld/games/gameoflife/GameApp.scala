@@ -1,10 +1,8 @@
 package com.github.lpld.games.gameoflife
 
-import fs2.Stream
-import cats.effect.{IO, Timer}
+import cats.effect.IO
+import com.github.lpld.games.{ConsoleActions, SafeApp}
 import com.github.lpld.games.gameoflife.GameOfLife.Board
-
-import scala.concurrent.ExecutionContext
 
 import scala.concurrent.duration.DurationInt
 
@@ -12,29 +10,15 @@ import scala.concurrent.duration.DurationInt
   * @author leopold
   * @since 21/09/18
   */
-object GameApp extends App {
+object GameApp extends SafeApp with ConsoleActions {
 
-  val clearScreen = Stream.eval(putStrLn("")).repeat.take(30)
+  def run: IO[Unit] = {
+    val game = new Game(Board(initialRows), closed = true)
 
-  val game = new Game(Board(initialRows), closed = true)
+    printEvery(200.millis)(game.boards.flatMap(b => printNewRegion(b.rows)))
+  }
 
-  implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
-
-  Stream.awakeEvery[IO](200.millis)
-    .zipWith(game.boards.flatMap(printBoard))((_, i) => i)
-    .compile.drain
-    .unsafeRunSync()
-
-  def putStrLn(s: String) = IO { println(s) }
-
-  def printRow(row: Vector[Boolean]) =
-    putStrLn(row.map(if (_) '\u25A0' else '.').mkString)
-
-  def printRows(board: Board) = Stream(board.rows: _*).evalMap(printRow)
-
-  def printBoard(board: Board) = (clearScreen ++ printRows(board)).last
-
-  def initialRows = Vector(
+  val initialRows = Vector(
     row("............................................"),
     row("...X........................................"),
     row("..X........................................."),

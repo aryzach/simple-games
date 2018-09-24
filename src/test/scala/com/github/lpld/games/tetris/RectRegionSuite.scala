@@ -2,6 +2,7 @@ package com.github.lpld.games.tetris
 
 import org.scalatest.{FunSuite, Matchers}
 import scalaz.Maybe.{Empty, Just}
+import TetrisConsole._
 
 /**
   * @author leopold
@@ -132,10 +133,4 @@ class RectRegionSuite extends FunSuite with Matchers {
       printRegion(piece2.mirror) shouldEqual s1
     }
   }
-
-  def printRegion(piece: RectRegion): String =
-    piece.cells.map(
-      row => row.map(if (_) 'X' else '.').mkString
-    ).mkString("\n")
-
 }

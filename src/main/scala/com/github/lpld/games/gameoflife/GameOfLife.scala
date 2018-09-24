@@ -2,7 +2,6 @@ package com.github.lpld.games.gameoflife
 
 import com.github.lpld.games.gameoflife.GameOfLife._
 import fs2.{Pure, Stream}
-import scalaz.EphemeralStream
 
 /**
   * @author leopold

@@ -1,8 +1,7 @@
 package com.github.lpld.games.tetris
 
-import scalaz.Maybe.{Empty, Just}
-import scalaz.Scalaz._
-import scalaz._
+import cats.instances.all._
+import cats.syntax.all._
 
 /**
   * Class that represents a rectangular region. Each of the cells of the region
@@ -58,25 +57,25 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
     * return [[scalaz.Maybe.Empty]]. Otherwise it will return new [[RectRegion]] that
     * is the result of the injection.
     */
-  def inject(injectee: RectRegion, coord: Coord): Maybe[RectRegion] =
+  def inject(injectee: RectRegion, coord: Coord): Option[RectRegion] =
 
   // Check the boundaries. If we try to inject a region outside of
   // "this" region, we will return Empty
     if (coord.x < 0 || coord.y < 0 ||
         coord.x + injectee.height > this.height ||
-        coord.y + injectee.width > this.width) Empty()
+        coord.y + injectee.width > this.width) None
     else {
       // Combine two values only if they are not both true.
-      def combineValues(v1: Boolean, v2: Boolean): Maybe[Boolean] =
-        if (v1 && v2) Empty()
-        else Just(v1 || v2)
+      def combineValues(v1: Boolean, v2: Boolean): Option[Boolean] =
+        if (v1 && v2) None
+        else Some(v1 || v2)
 
       // Combine cells of this RectRegion at coordinates (x, y) with
       // corresponding cells of the injectee region.
-      def combineCellsAt(x: Int, y: Int): Maybe[Boolean] =
+      def combineCellsAt(x: Int, y: Int): Option[Boolean] =
         if (x < coord.x || y < coord.y ||
             x >= coord.x + injectee.height ||
-            y >= coord.y + injectee.width) Just(this (x, y))
+            y >= coord.y + injectee.width) Some(this (x, y))
         else combineValues(this (x, y), injectee(x - coord.x, y - coord.y))
 
       // Combine all the cells. If some of the cells could not be combined, they will equal to Empty
