@@ -1,8 +1,7 @@
 package com.github.lpld.games.tetris
 
+import com.github.lpld.games.tetris.TetrisConsole._
 import org.scalatest.{FunSuite, Matchers}
-import scalaz.Maybe.{Empty, Just}
-import TetrisConsole._
 
 /**
   * @author leopold
@@ -22,17 +21,19 @@ class RectRegionSuite extends FunSuite with Matchers {
 
     for (x <- 0 until size)
       for (y <- 0 until size)
-        empty.inject(piece, Coord(x, y)) shouldEqual Just(regionWithSingleCell(x, y))
+        empty.inject(piece, Coord(x, y)) shouldEqual Some(regionWithSingleCell(x, y))
   }
 
   test("RectRegion.inject should not inject cells outside of the region") {
     val empty = RectRegion(5, 5)
     val piece = RectRegion("X")
 
-    empty.inject(piece, Coord(-1, 0)) shouldEqual Empty()
-    empty.inject(piece, Coord(2, -1)) shouldEqual Empty()
-    empty.inject(piece, Coord(5, 2)) shouldEqual Empty()
-    empty.inject(piece, Coord(3, 5)) shouldEqual Empty()
+    Seq(
+      empty.inject(piece, Coord(-1, 0)),
+      empty.inject(piece, Coord(2, -1)),
+      empty.inject(piece, Coord(5, 2)),
+      empty.inject(piece, Coord(3, 5))
+    ).foreach(_ shouldEqual None)
   }
 
   test("RectRegion.inject should inject a piece if there is enough room") {
@@ -48,18 +49,18 @@ class RectRegionSuite extends FunSuite with Matchers {
         |.X""")
 
     val expected = Seq(
-      Coord(0, 0) -> Empty(),
-      Coord(0, 1) -> Empty(),
+      Coord(0, 0) -> None,
+      Coord(0, 1) -> None,
 
-      Coord(0, 2) -> Just(RectRegion(
+      Coord(0, 2) -> Some(RectRegion(
         """..XX
           |...X
           |.XXX
           |XXX.""")),
 
-      Coord(3, 3) -> Empty(),
+      Coord(3, 3) -> None,
 
-      Coord(1, 2) -> Just(RectRegion(
+      Coord(1, 2) -> Some(RectRegion(
         """....
           |..XX
           |.XXX

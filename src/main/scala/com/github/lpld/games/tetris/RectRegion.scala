@@ -54,7 +54,7 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
     * that the corresponding cells of both regions will be combined (if possible). Two cells can be
     * combined if at least one of them is empty (false). If both cells are non-empty (true),
     * it means that there's no room for {{{injectee}}} region. In this case this function will
-    * return [[scalaz.Maybe.Empty]]. Otherwise it will return new [[RectRegion]] that
+    * return [[None]]. Otherwise it will return new [[RectRegion]] that
     * is the result of the injection.
     */
   def inject(injectee: RectRegion, coord: Coord): Option[RectRegion] =
@@ -85,10 +85,10 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
             combineCellsAt(x, y)
           }
 
-//      combined.foldLeft(Maybe.just(Seq.empty[Seq[Boolean]]))((acc, row) =>
+//      combined.foldLeft(Some(Seq.empty[Seq[Boolean]]))((acc, row) =>
 //        acc.flatMap(rows => row.sequence.map(r => rows :+ r)))
 
-      // Turn Seq[Seq[Maybe[Boolean]] into Maybe[Seq[Seq[Boolean]]. If any of the cells is Empty,
+      // Turn Seq[Seq[Option[Boolean]] into Option[Seq[Seq[Boolean]]. If any of the cells is Empty,
       // then the whole regions will be empty
       combined
         .map(_.sequence).sequence

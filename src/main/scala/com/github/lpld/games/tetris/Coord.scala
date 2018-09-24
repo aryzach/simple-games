@@ -6,5 +6,5 @@ package com.github.lpld.games.tetris
   */
 case class Coord(x: Int, y: Int) {
 
-  def lineBelow = Coord(x + 1, y)
+  def rowBelow = Coord(x + 1, y)
 }

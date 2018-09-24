@@ -81,8 +81,9 @@ class Tetris(height: Int, width: Int) {
           case Some(newField) =>
             // If successful, then trying to move it further:
             State(
-              Action.PlacePiece(piece, at.lineBelow, firstStep = false),
-              field, newField, pieces)
+              Action.PlacePiece(piece, at.rowBelow, firstStep = false),
+              field, newField, pieces
+            )
         }
 
       // todo: stop running
