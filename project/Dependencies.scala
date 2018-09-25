@@ -14,4 +14,5 @@ object Dependencies {
   lazy val scalazStream = "org.scalaz.stream" %% "scalaz-stream" % "0.8.6"
   lazy val cats = "org.typelevel" %% "cats-core" % "1.4.0"
   lazy val catsEffect = "org.typelevel" %% "cats-effect" % "1.0.0"
+  lazy val jansi = "org.fusesource.jansi" % "jansi" % "1.17.1"
 }

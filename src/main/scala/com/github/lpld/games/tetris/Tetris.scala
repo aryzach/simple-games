@@ -1,21 +1,21 @@
 package com.github.lpld.games.tetris
 
 import cats.effect.{ContextShift, IO, Timer}
-import com.github.lpld.games.tetris.Action._
+import com.github.lpld.games.tetris.Event._
 import com.github.lpld.games.tetris.Tetris.PiecesSource
 import fs2.{Pure, Stream}
 
 import scala.concurrent.duration.DurationLong
 
-/**
-  * Next action that should be performed.
-  */
-sealed trait Action
-object Action {
-  case object Tick extends Action
-  case class UserAction(move: Move) extends Action
+sealed trait Event
+object Event {
+  case object Tick extends Event
+  case class UserAction(move: Move) extends Event
 }
 
+/**
+  * Command for moving active piece
+  */
 sealed trait Move
 object Move {
   case object Rotate extends Move
@@ -24,9 +24,24 @@ object Move {
   //  case object Down extends Move
 }
 
+sealed trait Status
+object Status {
+  case object Active extends Status
+  case object Paused extends Status
+  case object Over extends Status
+}
+
+/**
+  * @param status         Active, paused or over
+  * @param field          Current state of the field (without the piece)
+  * @param fieldWithPiece Current state of the field with active piece. When the piece reaches
+  *                       the lowest possible location, [[fieldWithPiece]] will become new [[field]]
+  * @param activePiece    Active piece along with its coordinates
+  * @param piecesSource   Stream of pieces
+  */
 case class State
 (
-  gameActive: Boolean,
+  status: Status,
   field: RectRegion,
   fieldWithPiece: RectRegion,
   activePiece: Option[(RectRegion, Coord)],
@@ -43,24 +58,34 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
 
   private val start: Coord = Coord(0, width / 2 - 1)
 
-  val states: Stream[IO, RectRegion] = {
+  /**
+    * This stream reflects all changes in the state of game field.
+    */
+  val fieldsStream: Stream[IO, RectRegion] = {
     val emptyField = RectRegion(height, width)
 
-    val tick: Stream[IO, Action] = Stream.awakeEvery[IO](800.millis).map(_ => Tick)
-    val userMoves: Stream[IO, Action] = interactions.map(UserAction)
+    // Two sources of events:
+    // 1. Regular ticks
+    val tick: Stream[IO, Event] = Stream.awakeEvery[IO](800.millis).map(_ => Tick)
+    // 2. User's interactions
+    val userMoves: Stream[IO, Event] = interactions.map(UserAction)
 
-    val allActions: Stream[IO, Action] = tick.merge(userMoves)
+    // merge them
+    val allEvents: Stream[IO, Event] = tick merge userMoves
 
-    val initial = State(gameActive = true, emptyField, emptyField, None, Pieces.infiniteStream)
+    val initial = State(Status.Active, emptyField, emptyField, None, Pieces.infiniteStream)
 
-    allActions
+    allEvents
       .scan(initial)(nextState)
-      .takeWhile(_.gameActive)
+      .takeWhile(_.status != Status.Over)
       .map(_.fieldWithPiece)
   }
 
-  private def nextState(state: State, action: Action): State =
-    action match {
+  /**
+    * Compute next game state given the previous state and an event.
+    */
+  private def nextState(state: State, event: Event): State =
+    event match {
       case Tick => state.activePiece match {
         case None => injectNew(state)
         case Some((piece, at)) =>
@@ -77,7 +102,7 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
               val (rotated, newCoord) = rotate(piece, at)
               inject(state.field, rotated, newCoord, state.piecesSource)
           }
-                                  }.getOrElse(state)
+        }.getOrElse(state)
     }
 
   private def rotate(piece: RectRegion, at: Coord): (RectRegion, Coord) = {
@@ -91,16 +116,14 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
 
     inject(currentState.fieldWithPiece, newPiece, start, newSource)
       .getOrElse(State(
-        gameActive = false, currentState.fieldWithPiece, currentState
-          .fieldWithPiece, None, newSource
+        Status.Over, currentState.fieldWithPiece, currentState.fieldWithPiece, None, newSource
       ))
   }
 
   private def inject(field: RectRegion, piece: RectRegion, at: Coord,
                      piecesSource: PiecesSource): Option[State] =
     field.inject(piece, at)
-      .map(result => State(gameActive = true, field, result, Some(piece, at), piecesSource))
-
+      .map(result => State(Status.Active, field, result, Some(piece, at), piecesSource))
 
   private def getNextPiece(pieces: PiecesSource): (RectRegion, PiecesSource) =
     (pieces.head.toList.head, pieces.tail)
