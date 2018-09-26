@@ -134,6 +134,27 @@ class RectRegionSuite extends FunSuite with Matchers {
     }
   }
 
+  test("RectRegion.clearFilledRows should remove all filled rows and add empty rows on top of the field instead of them") {
+    val region = RectRegion(
+      """...X.
+        |XXXXX
+        |..XXX
+        |.XX..
+        |XXXXX"""
+    )
+
+    val shifted = RectRegion(
+      """.....
+        |.....
+        |...X.
+        |..XXX
+        |.XX.."""
+    )
+
+    region.clearFilledRows shouldEqual Some(shifted)
+    shifted.clearFilledRows shouldEqual None
+  }
+
   def printRegion(piece: RectRegion): String =
     piece.cells.map(
       row => row.map(if (_) 'X' else '.').mkString

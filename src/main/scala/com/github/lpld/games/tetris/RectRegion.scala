@@ -49,6 +49,21 @@ case class RectRegion(cells: Vector[Vector[Boolean]]) extends AnyVal {
     }
 
   /**
+    * Remove filled rows and add empty rows on top of the region instead of them.
+    */
+  def clearFilledRows: Option[RectRegion] = {
+
+    val newField = cells.foldRight(List.empty[Vector[Boolean]]) { (row, acc) =>
+      if (row.forall(b => b)) acc
+      else row :: acc
+    }
+
+    if (newField.length == this.height) None
+    else Some(RectRegion(
+      List.fill(this.height - newField.length)(Vector.fill(this.width)(false)) ::: newField))
+  }
+
+  /**
     * Try "inject" a new {{{injectee}}} region into this region at coordinates {{{coord}}}.
     * "Injection" means that the resulting region will be the same size as "this" region and
     * that the corresponding cells of both regions will be combined (if possible). Two cells can be

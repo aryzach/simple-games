@@ -87,10 +87,10 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
   private def nextState(state: GameState, event: Event): GameState =
     event match {
       case Tick => state.activePiece match {
-        case None => injectNew(state)
+        case None => activateNew(state)
         case Some((piece, at)) =>
           inject(state.field, piece, at.rowDown, state.piecesSource)
-            .getOrElse(injectNew(state))
+            .getOrElse(activateNew(state))
       }
 
       case UserAction(move) =>
@@ -101,24 +101,42 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
             case Move.Rotate =>
               val (rotated, newCoord) = rotate(piece, at)
               inject(state.field, rotated, newCoord, state.piecesSource)
-            case Move.Down =>
-              val newField = Stream.unfold(at) { prevCoord =>
-                val newCoord = prevCoord.rowDown
-                state.field
-                  .inject(piece, newCoord)
-                  .map((_, newCoord))
-              }.compile.last
-
-              newField.map(f => GameState(
-                status = Status.Active,
-                field = f,
-                fieldWithPiece = f,
-                activePiece = None,
-                piecesSource = state.piecesSource
-              ))
+            case Move.Down => moveDown(state, piece, at)
           }
         }.getOrElse(state)
     }
+
+  private def moveDown(state: GameState, piece: RectRegion, at: Coord) = {
+    val shifts = Stream.unfold(at) { prevCoord =>
+      val newCoord = prevCoord.rowDown
+      state.field
+        .inject(piece, newCoord)
+        .map(f => ((f, newCoord), newCoord))
+    }.take(4).compile.toList
+
+    if (shifts.length == 4) {
+      val (f, newCoord) = shifts(2)
+      Some(state.copy(fieldWithPiece = f, activePiece = Some((piece, newCoord))))
+    } else {
+      shifts.take(3)
+        .lastOption
+        .map { case (f, _) =>
+          GameState(
+            status = Status.Active,
+            field = f,
+            fieldWithPiece = f,
+            activePiece = None,
+            piecesSource = state.piecesSource
+          )
+        }
+    }
+  }
+  private def activateNew(state: GameState) = checkFilledRows(state).getOrElse(injectNew(state))
+
+  private def checkFilledRows(state: GameState): Option[GameState] = {
+    state.fieldWithPiece.clearFilledRows
+      .map(shifted => state.copy(field = shifted, fieldWithPiece = shifted))
+  }
 
   private def rotate(piece: RectRegion, at: Coord): (RectRegion, Coord) = {
     val diff = (piece.height - piece.width) / 2
@@ -131,14 +149,24 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
 
     inject(currentState.fieldWithPiece, newPiece, start, newSource)
       .getOrElse(GameState(
-        Status.Over, currentState.fieldWithPiece, currentState.fieldWithPiece, None, newSource
+        status = Status.Over,
+        field = currentState.fieldWithPiece,
+        fieldWithPiece = currentState.fieldWithPiece,
+        activePiece = None,
+        piecesSource = newSource
       ))
   }
 
   private def inject(field: RectRegion, piece: RectRegion, at: Coord,
                      piecesSource: PiecesSource): Option[GameState] =
     field.inject(piece, at)
-      .map(result => GameState(Status.Active, field, result, Some(piece, at), piecesSource))
+      .map(result => GameState(
+        status = Status.Active,
+        field = field,
+        fieldWithPiece = result,
+        activePiece = Some(piece, at),
+        piecesSource = piecesSource)
+      )
 
   private def getNextPiece(pieces: PiecesSource): (RectRegion, PiecesSource) =
     (pieces.head.toList.head, pieces.tail)
