@@ -15,4 +15,5 @@ object Dependencies {
   lazy val cats = "org.typelevel" %% "cats-core" % "1.4.0"
   lazy val catsEffect = "org.typelevel" %% "cats-effect" % "1.0.0"
   lazy val jansi = "org.fusesource.jansi" % "jansi" % "1.17.1"
+  lazy val jline = "org.jline" % "jline" % "3.9.0"
 }

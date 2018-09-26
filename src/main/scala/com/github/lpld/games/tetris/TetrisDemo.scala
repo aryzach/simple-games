@@ -3,9 +3,8 @@ package com.github.lpld.games.tetris
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.all._
 import com.github.lpld.games.ConsoleActions
+import com.github.lpld.games.tetris.Draw.AnsiState
 import fs2.Stream
-
-import scala.concurrent.duration.DurationInt
 
 /**
   * @author leopold
@@ -14,12 +13,24 @@ import scala.concurrent.duration.DurationInt
 object TetrisDemo extends IOApp with ConsoleActions {
 
   override def run(args: List[String]): IO[ExitCode] = {
+    val tetris = new Tetris(15, 20, UserInput.moves)
 
-    val userMoves = Stream.awakeEvery[IO](300.millis).map(_ => Move.Rotate)
-
-    val tetris = new Tetris(15, 20, userMoves)
-
-    tetris.fieldsStream.flatMap(r => printNewRegion(r.cells)).compile.drain *>
+    eraseScreen *>
+    tetris.fieldsStream.flatMap(r => Stream.eval(printField(r))).compile.drain *>
     IO.pure(ExitCode.Success)
   }
+
+  private def printField(reg: RectRegion): IO[Unit] = {
+    val printLines: AnsiState =
+      Draw.goto(1, 1) *>
+      Draw.printlns(reg.cells.map(showRow))
+
+    printAnsi(printLines)
+  }
+
+  private def eraseScreen = printAnsi(Draw.eraseScreen)
+
+  private val printAnsi = Draw.materialize _ andThen Draw.run
+
+  private def showRow(row: Seq[Boolean]) = row.map(if (_) '\u25A0' else '.').mkString
 }

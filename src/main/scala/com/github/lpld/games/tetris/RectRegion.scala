@@ -10,7 +10,7 @@ import cats.syntax.all._
   * @author leopold
   * @since 22/09/18
   */
-case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
+case class RectRegion(cells: Vector[Vector[Boolean]]) extends AnyVal {
 
   def height: Int = cells.length
   def width: Int = cells.headOption.map(_.length).getOrElse(0)
@@ -98,8 +98,9 @@ case class RectRegion(cells: Seq[Seq[Boolean]]) extends AnyVal {
 }
 
 object RectRegion {
+  def apply(cells: Seq[Seq[Boolean]]): RectRegion = RectRegion(cells.map(_.toVector).toVector)
 
-  def apply(height: Int, width: Int): RectRegion = RectRegion(Seq.fill(height, width)(false))
+  def apply(height: Int, width: Int): RectRegion = RectRegion(Vector.fill(height, width)(false))
 
   def apply(str: String): RectRegion = {
     val cells = for (line <- str.stripMargin.lines) yield {

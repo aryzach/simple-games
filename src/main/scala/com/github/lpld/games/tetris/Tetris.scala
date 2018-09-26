@@ -21,7 +21,7 @@ object Move {
   case object Rotate extends Move
   case object Right extends Move
   case object Left extends Move
-  //  case object Down extends Move
+  case object Down extends Move
 }
 
 sealed trait Status
@@ -39,7 +39,7 @@ object Status {
   * @param activePiece    Active piece along with its coordinates
   * @param piecesSource   Stream of pieces
   */
-case class State
+case class GameState
 (
   status: Status,
   field: RectRegion,
@@ -66,14 +66,14 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
 
     // Two sources of events:
     // 1. Regular ticks
-    val tick: Stream[IO, Event] = Stream.awakeEvery[IO](800.millis).map(_ => Tick)
+    val tick: Stream[IO, Event] = Stream.awakeEvery[IO](500.millis).map(_ => Tick)
     // 2. User's interactions
     val userMoves: Stream[IO, Event] = interactions.map(UserAction)
 
     // merge them
     val allEvents: Stream[IO, Event] = tick merge userMoves
 
-    val initial = State(Status.Active, emptyField, emptyField, None, Pieces.infiniteStream)
+    val initial = GameState(Status.Active, emptyField, emptyField, None, Pieces.infiniteStream)
 
     allEvents
       .scan(initial)(nextState)
@@ -84,7 +84,7 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
   /**
     * Compute next game state given the previous state and an event.
     */
-  private def nextState(state: State, event: Event): State =
+  private def nextState(state: GameState, event: Event): GameState =
     event match {
       case Tick => state.activePiece match {
         case None => injectNew(state)
@@ -101,6 +101,21 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
             case Move.Rotate =>
               val (rotated, newCoord) = rotate(piece, at)
               inject(state.field, rotated, newCoord, state.piecesSource)
+            case Move.Down =>
+              val newField = Stream.unfold(at) { prevCoord =>
+                val newCoord = prevCoord.rowDown
+                state.field
+                  .inject(piece, newCoord)
+                  .map((_, newCoord))
+              }.compile.last
+
+              newField.map(f => GameState(
+                status = Status.Active,
+                field = f,
+                fieldWithPiece = f,
+                activePiece = None,
+                piecesSource = state.piecesSource
+              ))
           }
         }.getOrElse(state)
     }
@@ -110,20 +125,20 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
     (piece.rotate, Coord(at.x + diff, at.y - diff))
   }
 
-  private def injectNew(currentState: State): State = {
+  private def injectNew(currentState: GameState): GameState = {
 
     val (newPiece, newSource) = getNextPiece(currentState.piecesSource)
 
     inject(currentState.fieldWithPiece, newPiece, start, newSource)
-      .getOrElse(State(
+      .getOrElse(GameState(
         Status.Over, currentState.fieldWithPiece, currentState.fieldWithPiece, None, newSource
       ))
   }
 
   private def inject(field: RectRegion, piece: RectRegion, at: Coord,
-                     piecesSource: PiecesSource): Option[State] =
+                     piecesSource: PiecesSource): Option[GameState] =
     field.inject(piece, at)
-      .map(result => State(Status.Active, field, result, Some(piece, at), piecesSource))
+      .map(result => GameState(Status.Active, field, result, Some(piece, at), piecesSource))
 
   private def getNextPiece(pieces: PiecesSource): (RectRegion, PiecesSource) =
     (pieces.head.toList.head, pieces.tail)

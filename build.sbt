@@ -12,7 +12,9 @@ lazy val root = (project in file(".")).
       scalaTest % Test,
       fs2,
       cats,
-      catsEffect
+      catsEffect,
+      jansi,
+      jline
     ),
     scalacOptions ++= Seq(
       "-Ypartial-unification",
