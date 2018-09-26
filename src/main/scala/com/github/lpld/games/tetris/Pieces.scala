@@ -43,5 +43,4 @@ object Pieces {
 
   // for testing. infinite, but not random stream of pieces
   val infiniteStream: Stream[Pure, RectRegion] = Stream(allPossiblePieces: _*).repeat
-
 }

@@ -1,6 +1,5 @@
 package com.github.lpld.games.tetris
 
-import com.github.lpld.games.tetris.TetrisConsole._
 import org.scalatest.{FunSuite, Matchers}
 
 /**
@@ -134,4 +133,9 @@ class RectRegionSuite extends FunSuite with Matchers {
       printRegion(piece2.mirror) shouldEqual s1
     }
   }
+
+  def printRegion(piece: RectRegion): String =
+    piece.cells.map(
+      row => row.map(if (_) 'X' else '.').mkString
+    ).mkString("\n")
 }

@@ -11,8 +11,7 @@ import org.jline.terminal.{Terminal, TerminalBuilder}
 object UserInput {
 
   private val reader = createTerminal.reader()
-  private val readInput = IO { reader.read() }
-  private val inputs = Stream.repeatEval(readInput)
+  private val inputs = Stream.repeatEval(IO { reader.read() })
 
   val moves: Stream[IO, Move] = inputs.collect {
     case 'w' => Move.Rotate
