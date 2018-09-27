@@ -22,13 +22,18 @@ object Draw {
   def eraseScreen: DrawCommand = ansi(_.eraseScreen())
   def goto(x: Int, y: Int): DrawCommand = ansi(_.cursor(x, y))
   def print(s: String): DrawCommand = ansi(_.a(s))
-  def println(s: String): DrawCommand = print(s) *> ansi(_.newline())
-  def printlns(s: Vector[String]): DrawCommand = s traverse println map (_ => ())
 
+  def printAt(x: Int, y: Int, s: String): DrawCommand = goto(x, y) *> print(s)
+
+  def printLinesAt(x: Int, y: Int, lines: Vector[String]): DrawCommand = {
+    lines.zipWithIndex
+      .traverse { case (line, idx) => printAt(x + idx, y, line) }
+      .map(_ => Unit)
+  }
 }
 
 object Console {
 
-  def print(a: DrawCommand) = IO { AnsiConsole.out.println(a.run(Ansi.ansi()).value._1) }
+  def draw(a: DrawCommand) = IO { AnsiConsole.out.println(a.run(Ansi.ansi()).value._1) }
 }
 
