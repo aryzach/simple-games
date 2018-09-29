@@ -71,7 +71,7 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
 
     // Two sources of events:
     // 1. Regular ticks
-    val tick: Stream[IO, Event] = Stream.awakeEvery[IO](500.millis).map(_ => Tick)
+    val tick: Stream[IO, Event] = Stream.fixedRate[IO](500.millis).map(_ => Tick)
     // 2. User's interactions
     val userMoves: Stream[IO, Event] = interactions.map(UserAction)
     // merge them

@@ -23,7 +23,7 @@ trait ConsoleActions {
     (clearScreen ++ printRows(region)).last.map(_ => ())
 
   def printEvery[A](duration: FiniteDuration)(print: Stream[IO, A])(implicit timer: Timer[IO]): IO[Unit] =
-    Stream.awakeEvery[IO](duration)
+    Stream.fixedRate[IO](duration)
       .zipWith(print)((_, i) => i)
       .compile.drain
 }
