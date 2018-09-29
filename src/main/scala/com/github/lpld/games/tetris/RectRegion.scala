@@ -53,7 +53,7 @@ case class RectRegion(cells: Vector[Vector[Boolean]]) extends AnyVal {
     */
   def clearFilledRows: Option[(RectRegion, Int)] = {
 
-    val newField = cells.filter(_.forall(b => b))
+    val newField = cells.filterNot(_.forall(b => b))
 
     if (newField.length == this.height) None
     else {
