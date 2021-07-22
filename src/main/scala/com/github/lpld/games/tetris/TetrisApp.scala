@@ -10,8 +10,8 @@ import fs2.Stream
   */
 object TetrisApp extends IOApp {
 
-  val height = 15
-  val width = 15
+  val height = 30 
+  val width = 30 
 
   override def run(args: List[String]): IO[ExitCode] = {
     val tetris = new Tetris(height, width, UserInput.moves)

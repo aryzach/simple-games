@@ -27,6 +27,10 @@ object Pieces {
       |.X."""
   )
 
+
+
+
+
   val allPossiblePieces: Seq[RectRegion] = {
     // is this a monoid?
     def multF[A](f: A => A)(times: Int): A => A =

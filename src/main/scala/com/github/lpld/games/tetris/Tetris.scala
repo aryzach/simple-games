@@ -22,6 +22,7 @@ object Move {
   case object Right extends Move
   case object Left extends Move
   case object Down extends Move
+  case object FullDown extends Move
 }
 
 sealed trait Status
@@ -85,7 +86,7 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
       piecesSource = pullNextPiece(Pieces.infiniteStream),
       score = 0,
       level = 1,
-      linesCleared = 0,
+      linesCleared = 0
     )
 
     //
@@ -125,23 +126,24 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
             case Move.Rotate =>
               val (rotated, newCoord) = rotate(piece, at)
               injectExisting(state, rotated, newCoord)
-            case Move.Down => moveDown(state, piece, at)
+            case Move.Down => moveDown(state, piece, at, downInterval + 1)
+            case Move.FullDown => moveDown(state, piece, at, height)
           }
         }.getOrElse(state)
     }
 
-  private def moveDown(state: GameState, piece: RectRegion, at: Coord) = {
+  private def moveDown(state: GameState, piece: RectRegion, at: Coord, howFar: Int) = {
     // trying to shift the piece (downInterval + 1) rows down:
     val shifts = Stream.unfold(at) { prevCoord =>
       val newCoord = prevCoord.rowDown
       state.field
         .inject(piece, newCoord)
         .map(f => ((f, newCoord), newCoord))
-    }.take(downInterval + 1).compile.toList
+    }.take(howFar).compile.toList
 
-    if (shifts.length == downInterval + 1) {
+    if (shifts.length == howFar) {
       // if succeeded, then the piece is still active. shifting it `downInterval` rows down:
-      val (f, newCoord) = shifts(downInterval - 1)
+      val (f, newCoord) = shifts(downInterval)
       Some(state.copy(fieldWithPiece = f, activePiece = Some((piece, newCoord))))
     } else {
       // otherwise, taking the last shift position and making the piece inactive:
@@ -154,6 +156,7 @@ class Tetris(height: Int, width: Int, interactions: Stream[IO, Move])
       }
     }
   }
+
   private def activateNew(state: GameState) = checkFilledRows(state).getOrElse(injectNew(state))
 
   private def checkFilledRows(state: GameState): Option[GameState] = {

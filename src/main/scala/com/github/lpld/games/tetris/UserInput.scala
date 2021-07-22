@@ -18,6 +18,7 @@ object UserInput {
     case 'd' => Move.Right
     case 'a' => Move.Left
     case 's' => Move.Down
+    case ' ' => Move.FullDown
   }
 
   private def createTerminal: Terminal = {
