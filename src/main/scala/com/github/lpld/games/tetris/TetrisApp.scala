@@ -5,9 +5,9 @@ import cats.syntax.all._
 import fs2.Stream
 
 /**
-  * @author leopold
-  * @since 24/09/18
-  */
+ * @author leopold
+ * @since 24/09/18
+ */
 object TetrisApp extends IOApp {
 
   val height = 30 
@@ -20,7 +20,6 @@ object TetrisApp extends IOApp {
     tetris.gameSates.flatMap(r => Stream.eval(printState(r))).compile.drain *>
     IO.pure(ExitCode.Success)
   }
-
   private def printState(state: GameState): IO[Unit] =
     Console.draw(
       Draw.printLinesAt(1, 1, state.fieldWithPiece.cells.map(showRow)) *>
@@ -38,8 +37,8 @@ object TetrisApp extends IOApp {
       Draw.printAt(12, width + 2, s"Lines left: ${Tetris.linesPerLevel - state.linesCleared} ") *>
 
       Draw.goto(height + 1, 0)
-    )
-
+    )   
 
   private def showRow(row: Seq[Boolean]) = row.map(if (_) '\u25A0' else '.').mkString
+
 }
